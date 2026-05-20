@@ -1,2 +1,2 @@
-# MAS---Scute-Micromobility
+# MAS-Scute-Micromobility
 TODO
