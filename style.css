@@ -147,19 +147,25 @@ input { font-family: inherit; color: inherit; border: none; outline: none; backg
 .nav-item:active svg { transform: scale(0.88); }
 
 /* ═══ MAP VIEW ═══ */
-#view-map { padding: 0 0 calc(var(--nav-h)); overflow: hidden; position: relative; display: flex; flex-direction: column; }
+#view-map {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
 
 .error-banner {
   background: rgba(240,68,56,0.12); border: 1px solid rgba(240,68,56,0.3);
   color: #FCA5A5; padding: 12px 16px; font-size: 13px;
   display: flex; align-items: flex-start; gap: 8px;
-  flex-shrink: 0;
+  flex-shrink: 0; z-index: 5; position: relative;
 }
 .error-banner svg { flex-shrink: 0; margin-top: 1px; }
 
 .map-controls {
   display: flex; gap: 10px; padding: 12px 14px;
-  flex-shrink: 0; z-index: 5;
+  flex-shrink: 0; z-index: 20; position: relative;
 }
 .search-box {
   flex: 1; display: flex; align-items: center; gap: 8px;
@@ -179,7 +185,7 @@ input { font-family: inherit; color: inherit; border: none; outline: none; backg
 
 /* Filter Panel */
 .filter-panel {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 30;
   background: var(--bg-card); border-bottom: 1px solid var(--border);
   padding: 16px; animation: slideDown 0.25s ease;
 }
@@ -219,64 +225,126 @@ input { font-family: inherit; color: inherit; border: none; outline: none; backg
 .toggle-sw input:checked + .slider { background: var(--red); border-color: var(--red); }
 .toggle-sw input:checked + .slider:before { transform: translateX(18px); background: white; }
 
-/* Map Grid */
+/* ═══ MAPBOX CONTAINER ═══ */
 .map-container {
-  flex: 1; position: relative; overflow: hidden;
-  background: #0e1520;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
 }
-.map-grid {
-  position: absolute; inset: 0;
-  display: grid; grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(8, 1fr);
-  gap: 0; padding: 10px;
+
+#mapbox-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-.vehicle-pin {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; cursor: pointer;
-  animation: pinPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+
+/* Hide default Mapbox logo/attribution to keep UI clean */
+.mapboxgl-ctrl-logo { display: none !important; }
+.mapboxgl-ctrl-attrib { display: none !important; }
+.mapboxgl-ctrl-bottom-right { display: none !important; }
+.mapboxgl-ctrl-bottom-left { display: none !important; }
+
+/* ═══ CUSTOM VEHICLE MARKERS ═══ */
+.map-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  width: 52px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  transition: opacity 0.3s ease;
 }
-.vehicle-pin:hover .pin-bubble { transform: scale(1.1); }
-.vehicle-pin:active .pin-bubble { transform: scale(0.93); }
-@keyframes pinPop { from { opacity:0; transform: scale(0.3) translateY(20px); } }
+.map-marker:hover { transform: scale(1.12) translateY(-2px); }
+.map-marker:active { transform: scale(0.95); }
+/* Entrance animation via opacity only — does not affect layout measurement */
+.map-marker.entering { opacity: 0; }
+.map-marker.entered  { opacity: 1; }
+
 .pin-bubble {
-  width: 44px; height: 44px; border-radius: 50% 50% 50% 0%;
+  width: 44px; height: 44px;
+  border-radius: 50% 50% 50% 0%;
   transform: rotate(-45deg);
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px; transition: transform 0.2s;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  font-size: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.1);
 }
 .pin-bubble.type-scooter { background: linear-gradient(135deg, var(--green), var(--green-dark)); }
 .pin-bubble.type-ebike   { background: linear-gradient(135deg, var(--blue), #2563EB); }
 .pin-bubble.type-bike    { background: linear-gradient(135deg, var(--amber), #D97706); }
-.pin-bubble.low-battery  { background: linear-gradient(135deg, var(--red), #C0362A); }
-.pin-inner { transform: rotate(45deg); }
+.pin-inner { transform: rotate(45deg); display: block; line-height: 1; }
+
+/* Battery label — base style; colour overridden by bat-* modifier */
 .pin-label {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 6px; padding: 2px 6px; font-size: 10px;
-  color: var(--text-muted); white-space: nowrap;
+  border-radius: 6px; padding: 2px 7px;
+  font-size: 10px; font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background 0.3s;
 }
-.map-user-dot {
-  position: absolute; bottom: 30%; left: 50%;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: var(--blue); border: 3px solid white;
-  box-shadow: 0 0 0 6px rgba(59,130,246,0.25);
-  transform: translateX(-50%);
-  animation: pulse 2s infinite;
+/* green ≥ 80 % */
+.pin-label.bat-green  { background: rgba(29,186,106,0.88);  color: #fff; }
+/* yellow 50–79 % */
+.pin-label.bat-yellow { background: rgba(234,179,8,0.90);   color: #111; }
+/* orange 25–49 % */
+.pin-label.bat-orange { background: rgba(249,115,22,0.90);  color: #fff; }
+/* red < 25 % */
+.pin-label.bat-red    { background: rgba(240,68,56,0.90);   color: #fff; }
+
+/* ═══ LOCATE ME BUTTON ═══ */
+.locate-btn {
+  position: absolute;
+  bottom: 80px;
+  right: 14px;
+  z-index: 10;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  transition: all 0.2s;
 }
-@keyframes pulse {
-  0%,100% { box-shadow: 0 0 0 6px rgba(59,130,246,0.25); }
-  50%     { box-shadow: 0 0 0 12px rgba(59,130,246,0.1); }
+.locate-btn:active { transform: scale(0.93); background: var(--bg-ele); }
+.locate-btn.locating { color: var(--green); border-color: var(--green); }
+
+/* ═══ MAP LEGEND ═══ */
+.map-legend {
+  position: absolute;
+  bottom: 80px;
+  left: 14px;
+  z-index: 10;
+  background: rgba(24,28,38,0.92);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-muted);
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.legend-dot.scooter { background: var(--green); }
+.legend-dot.ebike   { background: var(--blue); }
+.legend-dot.bike    { background: var(--amber); }
+
+/* ═══ NO RESULTS OVERLAY ═══ */
 .no-results {
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; z-index: 15;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 12px;
   color: var(--text-dim); font-size: 14px;
-  background: rgba(14,21,32,0.85);
+  background: rgba(15,17,23,0.85);
+  backdrop-filter: blur(4px);
 }
 .no-results p { max-width: 200px; text-align: center; line-height: 1.5; }
 
@@ -331,8 +399,23 @@ input { font-family: inherit; color: inherit; border: none; outline: none; backg
 .points-value {
   display: flex; align-items: center; gap: 10px;
   font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800;
-  color: white; margin-bottom: 8px;
+  color: white;
 }
+/* Row wrapping the number + trophy button */
+.points-value-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.trophy-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 20px; padding: 7px 14px;
+  font-size: 12px; font-weight: 600;
+  color: white; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.trophy-btn:active { background: rgba(255,255,255,0.28); transform: scale(0.96); }
 .points-hint { font-size: 12px; opacity: 0.7; }
 
 .section-card {
@@ -670,7 +753,142 @@ textarea:focus { border-color: var(--green); outline: none; }
 .photo-btn { width: auto !important; padding: 10px 16px !important; display: flex !important; align-items: center !important; gap: 6px !important; }
 .photo-status { font-size: 12px; color: var(--green); }
 
-/* ═══ TOAST ═══ */
+/* ═══ QUEST MAP OVERLAY ═══ */
+.quest-map-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.quest-map-header h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+
+.quest-map-hint {
+  text-align: center; font-size: 12px; color: var(--text-muted);
+  padding: 8px; flex-shrink: 0; background: var(--bg);
+}
+
+/* Quest detail card */
+.quest-detail {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+  animation: sheetUp 0.3s cubic-bezier(0.34,1.1,0.64,1);
+}
+.qd-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.qd-icon { font-size: 28px; }
+.qd-header > div { flex: 1; }
+.qd-header h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+.qd-vehicle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.quest-pts-badge {
+  background: var(--green-glow); border: 1px solid var(--green);
+  color: var(--green); border-radius: 10px; padding: 5px 10px;
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+}
+.qd-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+
+/* Quest map markers */
+.quest-marker {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; cursor: pointer; width: 48px;
+  filter: drop-shadow(0 4px 10px rgba(29,186,106,0.5));
+}
+.quest-pin-bubble {
+  width: 42px; height: 42px;
+  border-radius: 50% 50% 50% 0%;
+  transform: rotate(-45deg);
+  background: linear-gradient(135deg, #FFD700, #F59E0B);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,255,255,0.15);
+  transition: transform 0.15s;
+}
+.quest-marker:hover .quest-pin-bubble { transform: rotate(-45deg) scale(1.1); }
+.quest-pin-bubble span { transform: rotate(45deg); display: block; line-height: 1; }
+.quest-pin-label {
+  background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.5);
+  border-radius: 6px; padding: 2px 6px;
+  font-size: 10px; font-weight: 700; color: #FFD700; white-space: nowrap;
+}
+
+/* Quest destination marker (endpoint flag) */
+.quest-dest-marker { cursor: default; }
+.quest-dest-pin {
+  font-size: 28px;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.6));
+  animation: destPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes destPop {
+  from { opacity: 0; transform: scale(0.4) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+
+.leader-row-me {
+  background: var(--green-glow);
+  border-radius: var(--radius-sm);
+  padding-left: 8px; padding-right: 8px;
+  margin: 0 -8px;
+  border-bottom: none !important;
+}
+
+/* ═══ LEADERBOARD OVERLAY ═══ */
+#leaderboard-overlay {
+  background: var(--bg);
+}
+.lb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.lb-header h3 {
+  font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700;
+}
+
+/* "Your position" card at the top */
+.lb-my-card {
+  margin: 16px 16px 8px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--green-dark) 0%, #0D7540 100%);
+  padding: 18px 20px;
+  position: relative; overflow: hidden;
+}
+.lb-my-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 85% 20%, rgba(255,255,255,0.12) 0%, transparent 55%);
+}
+.lb-my-inner {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+}
+.lb-my-inner svg { opacity: 0.8; flex-shrink: 0; }
+.lb-my-label {
+  font-size: 11px; opacity: 0.75;
+  letter-spacing: 0.04em; color: white;
+}
+.lb-my-rank {
+  font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800;
+  color: white; line-height: 1;
+}
+.lb-my-pts-wrap { margin-left: auto; text-align: right; }
+.lb-my-pts-label { font-size: 11px; opacity: 0.75; color: white; }
+.lb-my-pts {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
+  color: #FFD700;
+}
+
+/* Scrollable list area */
+.lb-list-wrap {
+  padding: 8px 16px 32px;
+  overflow-y: auto; flex: 1;
+}
+
 .toast {
   position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%;
   transform: translateX(-50%);
@@ -687,6 +905,12 @@ textarea:focus { border-color: var(--green); outline: none; }
   position: fixed; inset: 0; background: rgba(0,0,0,0.6);
   z-index: 400; backdrop-filter: blur(2px);
   animation: fadeIn 0.2s ease;
+}
+
+/* ═══ PULSE ANIMATION ═══ */
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 6px rgba(59,130,246,0.25); }
+  50%     { box-shadow: 0 0 0 12px rgba(59,130,246,0.1); }
 }
 
 /* ═══ SCROLLBAR ═══ */
