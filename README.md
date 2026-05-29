@@ -1,3 +1,6 @@
+<img width="1204" height="694" alt="Scute Final" src="https://github.com/user-attachments/assets/a6160951-3c3b-4565-b2d1-bfa4fd7154ee" />
+
+
 # 🛴 Scute — Plataforma de Micromobilidade Inteligente
 
 Projeto desenvolvido no âmbito da unidade curricular **40431 — Modelação e Análise de Sistemas**
