@@ -44,12 +44,6 @@ index.html → abrir com qualquer browser moderno
 (Chrome, Firefox, Safari ou Edge)
 ```
 
-Ou servir localmente:
-
-```bash
-npx serve .
-```
-
 ---
 
 ## 👤 Utilizador de Teste
